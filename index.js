@@ -1,6 +1,7 @@
 const fs = require('fs');
 const Discord = require('discord.js');
 const { prefix, token } = require('./config.json');
+const DB = require('./database/db.js').execute();
 
 
 const client = new Discord.Client();
@@ -20,6 +21,27 @@ client.once('ready', () => {
     console.log('BullyBot is online!')
 });
 
+client.on("guildCreate", (guild) => {
+    // This event triggers when the bot joins a guild.    
+
+    const text = 
+    "INSERT INTO Servers (id) VALUES ($1) ON CONFLICT (id) DO UPDATE SET id = $1";
+    const values = [guild.id];
+
+    // callback
+    DB.query(text, values, (err, res) => {
+        if (err) {
+            console.log(err.stack)
+        } else {
+            console.log(res.rows)
+        }
+    });
+});
+
+// client.on("guildUpdate", (oldGuild, newGuild) => {
+//     // This event triggers whenever the guild is updated.  
+//     console.log(`Joined new guild: ${guild.name}`);
+// });
 
 client.on('message', message => {
 

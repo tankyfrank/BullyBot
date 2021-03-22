@@ -1,4 +1,10 @@
 const ytdl = require('ytdl-core');
+const DB = require('../database/db.js').execute();
+
+function random_item(items) {
+
+    return items[Math.floor(Math.random() * items.length)];
+}
 
 module.exports = {
     name: 'voice',
@@ -7,46 +13,44 @@ module.exports = {
         if (message.member.voice.channel) {
 
             try {
-                // if (message.mentions.has(message.client.users.cache.find(user => user.username === 'Lord_Gable'))) {
-                if (message.mentions.has(message.client.users.cache.find(user => user.username === 'Blade ax'))) {
+                let link =  '';
+                const text = "SELECT * FROM voice_insults WHERE server_id=$1";
+                const values = [message.guild.id];
+                DB.query(text, values, (err, res) => {
+                    if (err) {
+                        console.log(err.stack);
+                    }
+                    else {
+                        if (res.rows.length == 0) {
+                            message.channel.send(`Insults list empty use: \`-add-voice\` command to add voice insults`);
+                            return;
+                        }
 
-                    const connection = await message.member.voice.channel.join();
+                        link = `${random_item(res.rows).link}`;
+                    }
+                });
 
-                    const dispatcher = connection.play('https://www.youtube.com/watch?v=qu_uJQQo_Us');
+                const connection = await message.member.voice.channel.join();
 
-                    dispatcher.on('start', () => {
-                        console.log('Audio is now playing!');
-                    });
+                const dispatcher = connection.play(ytdl(link, { filter: 'audioonly' }));
 
-                    dispatcher.on('finish', () => {
-                        console.log('Audio has finished playing!');
-                    });
+                dispatcher.on('start', () => {
+                    console.log('Audio is now playing!');
+                });
 
-                    // Always remember to handle errors appropriately!
-                    dispatcher.on('error', console.error);
+                dispatcher.on('finish', () => {
+                    console.log('Audio has finished playing!');
+                    connection.disconnect();
+                });
 
+                // Always remember to handle errors appropriately!
+                dispatcher.on('error', console.error);
 
-                }
-                else {
-                    const connection = await message.member.voice.channel.join();
-
-                    const dispatcher = connection.play(ytdl('https://www.youtube.com/watch?v=vzYYW8V3Ibc'));
-
-                    dispatcher.on('start', () => {
-                        console.log('Audio is now playing!');
-                    });
-
-                    dispatcher.on('finish', () => {
-                        console.log('Audio has finished playing!');
-                    });
-                }
             }
 
             catch (error) {
                 console.log(error.message); // "Oops!"
             }
-
-
 
         }
 
