@@ -1,4 +1,3 @@
-const { insult } = require('../insult.json');
 const DB = require('../database/db.js').execute();
 
 function random_item(items) {
